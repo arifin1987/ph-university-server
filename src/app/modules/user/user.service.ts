@@ -11,13 +11,15 @@ const createStudentIntoDB = async (password: string, studentData: TStudent) => {
   const userData: Partial<TUser> = {};
   if (!password) {
     userData.password = config.default_password as string;
+  } else {
+    userData.password = password;
   }
-
+  userData.email = studentData.email;
   // set student role
   userData.role = "student";
   // set manually generated id
   userData.id = "203010001";
-
+  console.log("user data", userData);
   const newUser = await User.create(userData);
   // create a student
   if (Object.keys(newUser).length) {
