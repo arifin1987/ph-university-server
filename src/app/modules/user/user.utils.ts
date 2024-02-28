@@ -1,5 +1,3 @@
-// year semesterCode 4 digit number
-
 import { TAcademicSemester } from "../academicSemester/academicSemester.interface";
 import { User } from "./user.model";
 
@@ -13,30 +11,17 @@ const findLastStudentId = async () => {
       _id: 0,
     }
   )
-    .sort({
-      createdAt: -1,
-    })
+    .sort({ createdAt: -1 })
     .lean();
-  return lastStudent?.id ? lastStudent.id : undefined;
+  // 203001 0001
+  return lastStudent?.id ? lastStudent.id.substring(6) : undefined;
 };
 
-export const generateStudentId = async (payload: TAcademicSemester) => {
+export const generateStudentId = async (payLoad: TAcademicSemester) => {
   //first time 0000
-  let currentId = (0).toString(); // 0000 by default
-  const lastStudentId = await findLastStudentId();
-  const lastStudentSemesterCode = lastStudentId?.substring(4, 6);
-  const lastStudentYear = lastStudentId?.substring(0, 4); //01
-  const currentSemesterCode = payload.code;
-  const currentYear = payload.year;
-  if (
-    lastStudentId &&
-    lastStudentSemesterCode === currentSemesterCode &&
-    lastStudentYear === currentYear
-  ) {
-    currentId = lastStudentId.substring(6); //0001
-  }
-
+  const currentId = (await findLastStudentId()) || (0).toString();
   let incrementId = (Number(currentId) + 1).toString().padStart(4, "0");
-  incrementId = `${payload.year}${payload.code}${incrementId}`;
+
+  incrementId = `${payLoad.year} ${payLoad.code} ${incrementId}`;
   return incrementId;
 };

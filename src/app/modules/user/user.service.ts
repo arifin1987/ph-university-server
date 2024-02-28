@@ -1,31 +1,42 @@
 import config from "../../config";
+import { TAcademicSemester } from "../academicSemester/academicSemester.interface";
+import { AcademicSemester } from "../academicSemester/academicSemester.model";
 import { TStudent } from "../student/student.interface";
 import { Student } from "../student/student.model";
 import { TUser } from "./user.interface";
 
 import { User } from "./user.model";
+import { generateStudentId } from "./user.utils";
 
-const createStudentIntoDB = async (password: string, studentData: TStudent) => {
+const createStudentIntoDB = async (password: string, payLoad: TStudent) => {
   // if password is not given, use default password
   // create a user object
   const userData: Partial<TUser> = {};
-  if (!password) {
-    userData.password = config.default_password as string;
-  } else {
-    userData.password = password;
-  }
-  userData.email = studentData.email;
+
+  userData.password = password || (config.default_password as string);
+
   // set student role
   userData.role = "student";
-  // set manually generated id
-  userData.id = "203010001";
+  // set student email
+  userData.email = payLoad.email;
+
+  // find academic semester info
+  const admissionSemester = await AcademicSemester.findById(
+    payLoad.admissionSemester
+  );
+  if (!admissionSemester) {
+    throw new Error("semester not found");
+  }
+
+  // set  generated id
+  userData.id = await generateStudentId(admissionSemester);
   console.log("user data", userData);
   const newUser = await User.create(userData);
   // create a student
   if (Object.keys(newUser).length) {
-    studentData.id = newUser.id;
-    studentData.user = newUser._id; //reference _id
-    const newStudent = await Student.create(studentData);
+    payLoad.id = newUser.id;
+    payLoad.user = newUser._id; //reference _id
+    const newStudent = await Student.create(payLoad);
     return newStudent;
   }
 };
